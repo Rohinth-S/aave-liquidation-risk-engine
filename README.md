@@ -82,3 +82,11 @@ The query returns aggregate collateral, debt, available borrow, thresholds and h
 The synthetic eight-block scenario has three accounts and three reserves. At the default two-block delay, the first modeled liquidation is at block 104. The replay's fixed close-factor, proportional collateral allocation and depth-impact rules are explicit scenario assumptions.
 
 ![Synthetic WETH market and delayed oracle prices, with liquidation counts](docs/demo-results.png)
+
+## Commit dates
+
+Both Git date fields on the 40 commits in the November 2026 portfolio update
+use retrospectively assigned milestones from 2026-08-01 through 2026-09-30,
+the project period listed in the résumé. Each commit records its assigned date
+in the Project-Milestone trailer and its original committer timestamp in
+the Original-Commit-Date trailer. Use git log --format=fuller to inspect the dates.
