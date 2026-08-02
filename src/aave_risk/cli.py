@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from . import __version__
+
 from .fixtures import demo_scenario
 from .scenario import Scenario
 from .stress import stress_replay
@@ -22,6 +24,7 @@ def main() -> None:
     parser.add_argument("--chain-id", type=int, help="expected chain ID for account reads")
     parser.add_argument("--network", default="ethereum")
     parser.add_argument("--base-decimals", type=int, default=8)
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args()
 
     try:

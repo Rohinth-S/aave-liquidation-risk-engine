@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aave-liquidation-risk-engine"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Multi-reserve Aave oracle and liquidation stress replay"
 requires-python = ">=3.11"
 dependencies = ["fastapi>=0.115", "pydantic>=2.9", "uvicorn>=0.30", "web3>=7.5"]
@@ -19,3 +19,6 @@ aave_liquidation_risk_engine = "aave_risk.cli:main"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.setuptools.dynamic]
+version = {attr = "aave_risk.__version__"}
