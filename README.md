@@ -12,6 +12,9 @@ flowchart LR
  A --> D[Risk dashboard/report]
 ```
 
+## Structural overview
+`src/aave_risk/engine.py` contains health-factor math, shock replay, liquidation estimates, and alert severity; `cli.py` demonstrates the replay; `tests/` covers healthy and stressed positions.
+
 ## Workflow
 1. Load normalized collateral and debt positions.
 2. Compute health factor from collateral value and liquidation threshold.
