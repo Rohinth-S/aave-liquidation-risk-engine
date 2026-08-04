@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from .artifacts import write_text_atomic
+
 from . import __version__
 
 from .fixtures import demo_scenario
@@ -49,14 +51,12 @@ def main() -> None:
                 values["config"]["oracle_delay_blocks"] = args.oracle_delay_blocks
                 scenario = Scenario.model_validate(values)
             if args.write_scenario:
-                args.write_scenario.parent.mkdir(parents=True, exist_ok=True)
-                args.write_scenario.write_text(scenario.model_dump_json(indent=2) + "\n", encoding="utf-8")
+                write_text_atomic(args.write_scenario, scenario.model_dump_json(indent=2) + "\n")
             result = stress_replay(scenario)
 
         payload = json.dumps(result, indent=2, allow_nan=False) + "\n"
         if args.output:
-            args.output.parent.mkdir(parents=True, exist_ok=True)
-            args.output.write_text(payload, encoding="utf-8")
+            write_text_atomic(args.output, payload)
     except (OSError, ValueError, RuntimeError) as exc:
         parser.error(str(exc))
     print(payload, end="")
