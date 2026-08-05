@@ -7,6 +7,7 @@ from pathlib import Path
 from .artifacts import write_text_atomic
 
 from . import __version__
+from .artifacts import require_distinct_paths
 
 from .fixtures import demo_scenario
 from .scenario import Scenario
@@ -30,6 +31,11 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
+        require_distinct_paths(
+            input_file=args.input,
+            report=args.output,
+            scenario_output=args.write_scenario,
+        )
         if args.account:
             from .account_data import read_account_data
             from .rpc import JsonRpcClient
