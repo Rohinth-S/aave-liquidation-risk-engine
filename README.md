@@ -32,5 +32,15 @@ python -m aave_risk.cli
 pytest -q
 ```
 
+## Live adapter boundary
+`aave_risk.rpc.JsonRpcClient` provides the RPC transport boundary for Ethereum, Arbitrum, and Polygon deployments. Position reconstruction remains separate from risk math.
+
+### Credential-dependent blockers
+Live Aave monitoring requires RPC access plus reserve/configuration ABI decoders and oracle/price-feed adapters. Synthetic shocks are the only default data source.
+
+## Environment
+
+Copy `.env.example` and set `RPC_URL` only when a reachable provider is available. The adapters do not embed credentials and never run implicitly during tests.
+
 ## Limitations
 The current model abstracts reserve configuration, close-factor changes, oracle heartbeat timing, and multi-asset correlation. Validate against historical Aave events before using it for operational decisions.
