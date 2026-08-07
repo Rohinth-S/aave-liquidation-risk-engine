@@ -60,6 +60,7 @@ def main() -> None:
                 write_text_atomic(args.write_scenario, scenario.model_dump_json(indent=2) + "\n")
             result = stress_replay(scenario)
 
+        result["producer"] = {"name": "aave-liquidation-risk-engine", "version": __version__, "format_version": 1}
         payload = json.dumps(result, indent=2, allow_nan=False) + "\n"
         if args.output:
             write_text_atomic(args.output, payload)
