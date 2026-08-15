@@ -2,9 +2,9 @@
 
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-Key = Annotated[str, Field(min_length=1, max_length=100)]
+Key = Annotated[str, StringConstraints(min_length=1, max_length=100, pattern=r"^\S(?:.*\S)?$")]
 Positive = Annotated[float, Field(gt=0, allow_inf_nan=False)]
 Nonnegative = Annotated[float, Field(ge=0, allow_inf_nan=False)]
 
