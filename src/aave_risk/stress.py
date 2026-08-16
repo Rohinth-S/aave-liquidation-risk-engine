@@ -10,7 +10,13 @@ Book = dict[str, dict[str, Balance]]
 
 def _apply(book: Book, balances: list[Balance]) -> None:
     for balance in balances:
-        book.setdefault(balance.account, {})[balance.asset] = balance
+        if balance.collateral or balance.debt:
+            book.setdefault(balance.account, {})[balance.asset] = balance
+        elif balance.account in book:
+            legs = book[balance.account]
+            legs.pop(balance.asset, None)
+            if not legs:
+                del book[balance.account]
 
 
 def _values(
