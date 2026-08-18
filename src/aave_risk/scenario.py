@@ -58,6 +58,7 @@ class Scenario(Contract):
         if blocks != sorted(set(blocks)):
             raise ValueError("market frames must have strictly increasing block numbers")
         accounts = set()
+        reserve_legs = set()
         for balances in [self.initial_balances, *(frame.balance_updates for frame in self.frames)]:
             keys = {(balance.account, balance.asset) for balance in balances}
             if len(keys) != len(balances):
@@ -65,8 +66,11 @@ class Scenario(Contract):
             if any(asset not in assets for _, asset in keys):
                 raise ValueError("balance asset is missing from reserves")
             accounts.update(account for account, _ in keys)
+            reserve_legs.update(keys)
         if any(set(frame.prices_usd) != assets for frame in self.frames):
             raise ValueError("each market frame must price every reserve")
         if len(accounts) * len(self.frames) * self.config.max_rounds > 500_000:
             raise ValueError("replay exceeds the account-frame-round budget")
+        if len(reserve_legs) * len(self.frames) * self.config.max_rounds > 2_000_000:
+            raise ValueError("replay exceeds the reserve-leg work budget")
         return self
