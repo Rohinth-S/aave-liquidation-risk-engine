@@ -36,6 +36,7 @@ class MarketFrame(Contract):
 
 class Config(Contract):
     oracle_delay_blocks: Annotated[int, Field(ge=0, le=100_000)] = 0
+    max_oracle_age_blocks: Annotated[int, Field(ge=0, le=100_000)] | None = None
     close_factor: Annotated[float, Field(gt=0, le=1)] = 0.5
     max_rounds: Annotated[int, Field(ge=1, le=20)] = 3
     max_round_price_impact: Annotated[float, Field(ge=0, lt=1)] = 0.2

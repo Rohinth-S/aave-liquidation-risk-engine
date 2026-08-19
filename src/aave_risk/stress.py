@@ -86,6 +86,8 @@ def stress_replay(scenario: Scenario) -> dict:
         else:
             oracle = market.copy()
             oracle_block = frame.block
+        oracle_age = frame.block - oracle_block
+        stale_oracle = config.max_oracle_age_blocks is not None and oracle_age > config.max_oracle_age_blocks
         initial_count = sum(_eligible(_values(legs, oracle, reserves)[2]) for legs in book.values())
         operations = 0
         repayments = 0.0
@@ -133,7 +135,7 @@ def stress_replay(scenario: Scenario) -> dict:
         history_blocks.append(frame.block)
         history_values.append(market.copy())
         frames.append({
-            "block": frame.block, "oracle_block": oracle_block, "oracle_age_blocks": frame.block - oracle_block,
+            "block": frame.block, "oracle_block": oracle_block, "oracle_age_blocks": oracle_age, "stale_oracle": stale_oracle,
             "market_prices_usd": market, "oracle_prices_usd": oracle,
             "eligible_before_rounds": initial_count,
             "eligible_after_rounds": sum(row["status"] == "liquidatable" for row in positions),
