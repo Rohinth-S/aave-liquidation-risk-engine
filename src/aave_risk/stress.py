@@ -112,7 +112,7 @@ def stress_replay(scenario: Scenario) -> dict:
                 })
                 operations += count
                 repayments += repaid
-                if not delayed or not history_blocks:
+                if not delayed:
                     oracle = market.copy()
 
         positions = []
