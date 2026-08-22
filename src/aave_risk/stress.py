@@ -79,8 +79,10 @@ def stress_replay(scenario: Scenario) -> dict:
         _apply(book, frame.balance_updates)
         market = dict(frame.prices_usd)
         delayed = config.oracle_delay_blocks > 0
+        requested_oracle_block = frame.block - config.oracle_delay_blocks
+        oracle_bootstrap = delayed and (not history_blocks or requested_oracle_block < history_blocks[0])
         if delayed and history_blocks:
-            index = max(0, bisect_right(history_blocks, frame.block - config.oracle_delay_blocks) - 1)
+            index = max(0, bisect_right(history_blocks, requested_oracle_block) - 1)
             oracle = history_values[index].copy()
             oracle_block = history_blocks[index]
         else:
@@ -137,6 +139,7 @@ def stress_replay(scenario: Scenario) -> dict:
         frames.append({
             "block": frame.block, "oracle_block": oracle_block, "oracle_age_blocks": oracle_age, "stale_oracle": stale_oracle,
             "market_prices_usd": market, "oracle_prices_usd": oracle,
+            "requested_oracle_block": requested_oracle_block, "oracle_bootstrap": oracle_bootstrap,
             "eligible_before_rounds": initial_count,
             "eligible_after_rounds": sum(row["status"] == "liquidatable" for row in positions),
             "liquidations": operations, "repaid_usd": repayments, "gas_usd": operations * frame.gas_usd,
