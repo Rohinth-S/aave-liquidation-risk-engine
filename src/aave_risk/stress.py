@@ -95,7 +95,8 @@ def stress_replay(scenario: Scenario) -> dict:
         repayments = 0.0
         rounds = []
 
-        if config.simulate_liquidations:
+        paused = bool(config.simulate_liquidations and config.pause_on_stale_oracle and stale_oracle)
+        if config.simulate_liquidations and not paused:
             for round_number in range(1, config.max_rounds + 1):
                 count, repaid, sold = _liquidate(book, oracle, reserves, config)
                 if not count:
@@ -140,6 +141,7 @@ def stress_replay(scenario: Scenario) -> dict:
             "block": frame.block, "oracle_block": oracle_block, "oracle_age_blocks": oracle_age, "stale_oracle": stale_oracle,
             "market_prices_usd": market, "oracle_prices_usd": oracle,
             "requested_oracle_block": requested_oracle_block, "oracle_bootstrap": oracle_bootstrap,
+            "liquidations_paused": paused,
             "eligible_before_rounds": initial_count,
             "eligible_after_rounds": sum(row["status"] == "liquidatable" for row in positions),
             "liquidations": operations, "repaid_usd": repayments, "gas_usd": operations * frame.gas_usd,

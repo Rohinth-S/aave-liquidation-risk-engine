@@ -41,6 +41,7 @@ class Config(Contract):
     max_rounds: Annotated[int, Field(ge=1, le=20)] = 3
     max_round_price_impact: Annotated[float, Field(ge=0, lt=1)] = 0.2
     simulate_liquidations: bool = True
+    pause_on_stale_oracle: bool = False
     watch_threshold: Annotated[float, Field(ge=1, le=5)] = 1.1
 
 
