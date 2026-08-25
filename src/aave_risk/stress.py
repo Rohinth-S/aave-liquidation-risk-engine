@@ -51,15 +51,15 @@ def _liquidate(
         }
         capacity = sum(assets.values())
         repayment = min(debt * config.close_factor, capacity)
-        if repayment <= 1e-9:
+        if repayment <= 0:
             continue
-        collateral_fraction = repayment / capacity
-        debt_fraction = repayment / debt
+        collateral_fraction = min(1.0, repayment / capacity)
+        debt_fraction = min(1.0, repayment / debt)
         for asset, leg in positions.items():
             sold = leg.collateral * collateral_fraction
             units_sold[asset] += sold
             positions[asset] = leg.model_copy(update={
-                "collateral": leg.collateral - sold, "debt": leg.debt * (1 - debt_fraction),
+                "collateral": leg.collateral * (1 - collateral_fraction), "debt": leg.debt * (1 - debt_fraction),
             })
         liquidations += 1
         repaid += repayment
