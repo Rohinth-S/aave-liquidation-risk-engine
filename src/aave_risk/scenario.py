@@ -38,11 +38,21 @@ class Config(Contract):
     oracle_delay_blocks: Annotated[int, Field(ge=0, le=100_000)] = 0
     max_oracle_age_blocks: Annotated[int, Field(ge=0, le=100_000)] | None = None
     close_factor: Annotated[float, Field(gt=0, le=1)] = 0.5
+    severe_health_factor: Annotated[float, Field(gt=0, lt=1)] | None = None
+    severe_close_factor: Annotated[float, Field(gt=0, le=1)] = 1.0
     max_rounds: Annotated[int, Field(ge=1, le=20)] = 3
     max_round_price_impact: Annotated[float, Field(ge=0, lt=1)] = 0.2
     simulate_liquidations: bool = True
     pause_on_stale_oracle: bool = False
     watch_threshold: Annotated[float, Field(ge=1, le=5)] = 1.1
+
+    @model_validator(mode="after")
+    def check_tiers(self) -> "Config":
+        if self.severe_health_factor is not None and self.severe_close_factor < self.close_factor:
+            raise ValueError("severe_close_factor must be at least close_factor")
+        if self.pause_on_stale_oracle and self.max_oracle_age_blocks is None:
+            raise ValueError("pausing requires a maximum oracle age")
+        return self
 
 
 class Scenario(Contract):

@@ -50,7 +50,10 @@ def _liquidate(
             for asset, leg in positions.items()
         }
         capacity = sum(assets.values())
-        repayment = min(debt * config.close_factor, capacity)
+        close_factor = config.close_factor
+        if config.severe_health_factor is not None and hf < config.severe_health_factor:
+            close_factor = config.severe_close_factor
+        repayment = min(debt * close_factor, capacity)
         if repayment <= 0:
             continue
         collateral_fraction = min(1.0, repayment / capacity)
