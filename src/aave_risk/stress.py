@@ -93,7 +93,10 @@ def stress_replay(scenario: Scenario) -> dict:
             oracle_block = frame.block
         oracle_age = frame.block - oracle_block
         stale_oracle = config.max_oracle_age_blocks is not None and oracle_age > config.max_oracle_age_blocks
-        initial_count = sum(_eligible(_values(legs, oracle, reserves)[2]) for legs in book.values())
+        initial = {account: _values(legs, oracle, reserves) for account, legs in book.items()}
+        initially_eligible = {account for account, (_, _, hf) in initial.items() if _eligible(hf)}
+        initial_count = len(initially_eligible)
+        distressed_debt = sum(initial[account][1] for account in initially_eligible)
         operations = 0
         repayments = 0.0
         rounds = []
@@ -135,6 +138,7 @@ def stress_replay(scenario: Scenario) -> dict:
                 status = "ok"
             positions.append({
                 "account": account, "market_health_factor": market_hf, "oracle_health_factor": oracle_hf,
+                "initial_oracle_health_factor": initial[account][2],
                 "collateral_usd": collateral, "debt_usd": debt, "shortfall_usd": max(0.0, debt - collateral),
                 "status": status,
             })
@@ -146,6 +150,7 @@ def stress_replay(scenario: Scenario) -> dict:
             "requested_oracle_block": requested_oracle_block, "oracle_bootstrap": oracle_bootstrap,
             "liquidations_paused": paused,
             "eligible_before_rounds": initial_count,
+            "distressed_debt_before_rounds_usd": distressed_debt,
             "eligible_after_rounds": sum(row["status"] == "liquidatable" for row in positions),
             "liquidations": operations, "repaid_usd": repayments, "gas_usd": operations * frame.gas_usd,
             "shortfall_usd": sum(row["shortfall_usd"] for row in positions),
