@@ -100,6 +100,7 @@ def stress_replay(scenario: Scenario) -> dict:
         operations = 0
         repayments = 0.0
         rounds = []
+        newly_eligible = set()
 
         paused = bool(config.simulate_liquidations and config.pause_on_stale_oracle and stale_oracle)
         if config.simulate_liquidations and not paused:
@@ -123,6 +124,10 @@ def stress_replay(scenario: Scenario) -> dict:
                 repayments += repaid
                 if not delayed:
                     oracle = market.copy()
+                    newly_eligible.update(
+                        account for account, legs in book.items()
+                        if account not in initially_eligible and _eligible(_values(legs, oracle, reserves)[2])
+                    )
 
         positions = []
         for account, legs in sorted(book.items()):
@@ -151,6 +156,7 @@ def stress_replay(scenario: Scenario) -> dict:
             "liquidations_paused": paused,
             "eligible_before_rounds": initial_count,
             "distressed_debt_before_rounds_usd": distressed_debt,
+            "newly_eligible_during_rounds": len(newly_eligible),
             "eligible_after_rounds": sum(row["status"] == "liquidatable" for row in positions),
             "liquidations": operations, "repaid_usd": repayments, "gas_usd": operations * frame.gas_usd,
             "shortfall_usd": sum(row["shortfall_usd"] for row in positions),
