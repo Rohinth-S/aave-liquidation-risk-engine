@@ -132,7 +132,7 @@ def stress_replay(scenario: Scenario) -> dict:
         positions = []
         for account, legs in sorted(book.items()):
             collateral, debt, market_hf = _values(legs, market, reserves)
-            _, _, oracle_hf = _values(legs, oracle, reserves)
+            oracle_collateral, oracle_debt, oracle_hf = _values(legs, oracle, reserves)
             if _eligible(oracle_hf):
                 status = "liquidatable"
             elif _eligible(market_hf):
@@ -146,6 +146,8 @@ def stress_replay(scenario: Scenario) -> dict:
                 "initial_oracle_health_factor": initial[account][2],
                 "collateral_usd": collateral, "debt_usd": debt, "shortfall_usd": max(0.0, debt - collateral),
                 "status": status,
+                "oracle_collateral_usd": oracle_collateral, "oracle_debt_usd": oracle_debt,
+                "oracle_shortfall_usd": max(0.0, oracle_debt - oracle_collateral),
             })
         history_blocks.append(frame.block)
         history_values.append(market.copy())
@@ -160,6 +162,7 @@ def stress_replay(scenario: Scenario) -> dict:
             "eligible_after_rounds": sum(row["status"] == "liquidatable" for row in positions),
             "liquidations": operations, "repaid_usd": repayments, "gas_usd": operations * frame.gas_usd,
             "shortfall_usd": sum(row["shortfall_usd"] for row in positions),
+            "oracle_shortfall_usd": sum(row["oracle_shortfall_usd"] for row in positions),
             "debt_usd": sum(row["debt_usd"] for row in positions),
             "rounds": rounds, "positions": positions,
         })
