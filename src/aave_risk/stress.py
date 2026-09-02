@@ -129,8 +129,12 @@ def stress_replay(scenario: Scenario) -> dict:
                         if account not in initially_eligible and _eligible(_values(legs, oracle, reserves)[2])
                     )
 
+        reserve_exposure = {asset: {"collateral_usd": 0.0, "debt_usd": 0.0} for asset in reserves}
         positions = []
         for account, legs in sorted(book.items()):
+            for asset, leg in legs.items():
+                reserve_exposure[asset]["collateral_usd"] += leg.collateral * market[asset]
+                reserve_exposure[asset]["debt_usd"] += leg.debt * market[asset]
             collateral, debt, market_hf = _values(legs, market, reserves)
             oracle_collateral, oracle_debt, oracle_hf = _values(legs, oracle, reserves)
             if _eligible(oracle_hf):
@@ -164,7 +168,7 @@ def stress_replay(scenario: Scenario) -> dict:
             "shortfall_usd": sum(row["shortfall_usd"] for row in positions),
             "oracle_shortfall_usd": sum(row["oracle_shortfall_usd"] for row in positions),
             "debt_usd": sum(row["debt_usd"] for row in positions),
-            "rounds": rounds, "positions": positions,
+            "rounds": rounds, "positions": positions, "reserve_exposure": reserve_exposure,
         })
     return {
         "config": config.model_dump(), "frames": frames,
