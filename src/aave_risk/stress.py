@@ -172,6 +172,15 @@ def stress_replay(scenario: Scenario) -> dict:
         })
     return {
         "config": config.model_dump(), "frames": frames,
+        "summary": {
+            "blocks": len(frames), "first_block": frames[0]["block"], "last_block": frames[-1]["block"],
+            "peak_distressed_debt_usd": max(frame["distressed_debt_before_rounds_usd"] for frame in frames),
+            "cumulative_gas_usd": sum(frame["gas_usd"] for frame in frames),
+            "cumulative_repaid_usd": sum(frame["repaid_usd"] for frame in frames),
+            "cumulative_liquidations": sum(frame["liquidations"] for frame in frames),
+            "final_shortfall_usd": frames[-1]["shortfall_usd"],
+            "stale_oracle_blocks_observed": sum(frame["stale_oracle"] for frame in frames),
+        },
         "alerts": [
             {"block": frame["block"], "account": row["account"], "status": row["status"]}
             for frame in frames for row in frame["positions"] if row["status"] != "ok"
