@@ -69,6 +69,19 @@ def _liquidate(
     return liquidations, repaid, units_sold
 
 
+def alert_transitions(frames: list[dict]) -> list[dict]:
+    previous = {}
+    changes = []
+    for frame in frames:
+        current = {row["account"]: row["status"] for row in frame["positions"] if row["status"] != "ok"}
+        for account in sorted(previous.keys() | current.keys()):
+            before, after = previous.get(account, "ok"), current.get(account, "ok")
+            if before != after:
+                changes.append({"block": frame["block"], "account": account, "from": before, "to": after})
+        previous = current
+    return changes
+
+
 def stress_replay(scenario: Scenario) -> dict:
     config = scenario.config
     reserves = {reserve.asset: reserve for reserve in scenario.reserves}
@@ -172,6 +185,7 @@ def stress_replay(scenario: Scenario) -> dict:
         })
     return {
         "config": config.model_dump(), "frames": frames,
+        "alert_transitions": alert_transitions(frames),
         "summary": {
             "blocks": len(frames), "first_block": frames[0]["block"], "last_block": frames[-1]["block"],
             "peak_distressed_debt_usd": max(frame["distressed_debt_before_rounds_usd"] for frame in frames),
