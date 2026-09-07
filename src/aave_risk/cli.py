@@ -1,6 +1,7 @@
 """Run a portfolio stress replay or read an explicit historical account snapshot."""
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -49,9 +50,13 @@ def main() -> None:
                 pool=args.pool, accounts=args.account, base_decimals=args.base_decimals,
             )
         else:
-            scenario = (
-                Scenario.model_validate_json(args.input.read_bytes()) if args.input else demo_scenario()
-            )
+            if args.input:
+                raw = args.input.read_bytes()
+                scenario = Scenario.model_validate_json(raw)
+                source = {"kind": "scenario_json", "sha256": hashlib.sha256(raw).hexdigest()}
+            else:
+                scenario = demo_scenario()
+                source = {"kind": "synthetic"}
             if args.oracle_delay_blocks is not None:
                 values = scenario.model_dump()
                 values["config"]["oracle_delay_blocks"] = args.oracle_delay_blocks
@@ -59,6 +64,7 @@ def main() -> None:
             if args.write_scenario:
                 write_text_atomic(args.write_scenario, scenario.model_dump_json(indent=2) + "\n")
             result = stress_replay(scenario)
+            result["source"] = source
 
         result["producer"] = {"name": "aave-liquidation-risk-engine", "version": __version__, "format_version": 1}
         payload = json.dumps(result, indent=2, allow_nan=False) + "\n"
