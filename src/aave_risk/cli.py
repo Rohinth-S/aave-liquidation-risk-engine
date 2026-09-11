@@ -11,6 +11,7 @@ from . import __version__
 from .artifacts import require_distinct_paths
 
 from .fixtures import demo_scenario
+from .comparison import LagStudy, compare_lags
 from .scenario import Scenario
 from .stress import stress_replay
 
@@ -23,6 +24,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--write-scenario", type=Path, help="export the replay inputs")
     parser.add_argument("--oracle-delay-blocks", type=int, help="override replay delay")
+    parser.add_argument("--compare-lags", type=int, nargs="+", metavar="BLOCKS")
     parser.add_argument("--pool", help="Aave v3 Pool proxy address for account reads")
     parser.add_argument("--block", type=int, help="pinned historical block")
     parser.add_argument("--chain-id", type=int, help="expected chain ID for account reads")
@@ -43,7 +45,7 @@ def main() -> None:
 
             if args.pool is None or args.block is None or args.chain_id is None:
                 parser.error("--account requires --pool, --block and --chain-id")
-            if args.write_scenario or args.oracle_delay_blocks is not None:
+            if args.write_scenario or args.oracle_delay_blocks is not None or args.compare_lags:
                 parser.error("replay options require a scenario or the demo")
             result = read_account_data(
                 JsonRpcClient(network=args.network), chain_id=args.chain_id, block_number=args.block,
@@ -63,7 +65,7 @@ def main() -> None:
                 scenario = Scenario.model_validate(values)
             if args.write_scenario:
                 write_text_atomic(args.write_scenario, scenario.model_dump_json(indent=2) + "\n")
-            result = stress_replay(scenario)
+            result = compare_lags(LagStudy(scenario=scenario, lags=args.compare_lags)) if args.compare_lags else stress_replay(scenario)
             result["source"] = source
 
         result["producer"] = {"name": "aave-liquidation-risk-engine", "version": __version__, "format_version": 1}
