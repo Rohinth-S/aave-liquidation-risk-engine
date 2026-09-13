@@ -52,8 +52,13 @@ with risk_tab:
     selected = st.selectbox("Block", [f["block"] for f in frames], index=len(frames)-1)
     frame = next(f for f in frames if f["block"] == selected)
     st.caption(f"Oracle block {frame['oracle_block']} · Age {frame['oracle_age_blocks']} blocks")
+    if frame["stale_oracle"]:
+        st.warning("The selected block uses a stale oracle mark.")
     st.dataframe(frame["positions"], hide_index=True)
+    st.bar_chart(pd.DataFrame(frame["reserve_exposure"]).T, y_label="USD")
     st.dataframe(pd.DataFrame(frame["rounds"]).drop(columns=["sold_units", "price_impact_usd"], errors="ignore"))
 with alert_tab:
     st.dataframe(report["alerts"], hide_index=True)
+    st.subheader("Status changes")
+    st.dataframe(report["alert_transitions"], hide_index=True)
 st.download_button("Download report", json.dumps(report, indent=2), "risk-report.json", "application/json")
