@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from aave_risk.fixtures import demo_scenario
+from aave_risk.comparison import LagStudy, compare_lags
 from aave_risk.scenario import Scenario
 from aave_risk.stress import stress_replay
 
@@ -39,7 +40,7 @@ block.metric("Final block", last["block"])
 exposed.metric("Eligible before liquidation", last["eligible_before_rounds"])
 gas.metric("Total modeled gas (USD)", f"{sum(f['gas_usd'] for f in frames):,.0f}")
 loss.metric("Final collateral shortfall (USD)", f"{last['shortfall_usd']:,.0f}")
-price_tab, risk_tab, alert_tab = st.tabs(["Oracle and market", "Positions and rounds", "Alerts"])
+price_tab, risk_tab, alert_tab, comparison_tab = st.tabs(["Oracle and market", "Positions and rounds", "Alerts", "Lag comparison"])
 with price_tab:
     asset = st.selectbox("Reserve", sorted(last["market_prices_usd"]))
     prices = pd.DataFrame([
@@ -61,4 +62,19 @@ with alert_tab:
     st.dataframe(report["alerts"], hide_index=True)
     st.subheader("Status changes")
     st.dataframe(report["alert_transitions"], hide_index=True)
+with comparison_tab:
+    candidates = st.multiselect("Oracle delays to compare", list(range(9)), default=[0, 2, 4])
+    if candidates and st.button("Run comparison"):
+        try:
+            study = LagStudy(scenario=scenario, lags=candidates)
+            if api:
+                request = Request(f"{api.rstrip('/')}/v1/compare", data=study.model_dump_json().encode(),
+                                  headers={"Content-Type": "application/json"}, method="POST")
+                with urlopen(request, timeout=20) as response:
+                    comparison = json.load(response)
+            else:
+                comparison = compare_lags(study)
+            st.dataframe(comparison["comparisons"], hide_index=True)
+        except (OSError, ValueError) as exc:
+            st.error(f"Comparison failed. {exc}")
 st.download_button("Download report", json.dumps(report, indent=2), "risk-report.json", "application/json")
