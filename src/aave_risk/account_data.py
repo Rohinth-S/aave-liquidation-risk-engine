@@ -17,11 +17,15 @@ def read_account_data(
         raise ValueError("requires a nonnegative block number, base decimals in [0, 36], and account list")
     target = Web3.to_checksum_address(pool)
     addresses = list(dict.fromkeys(Web3.to_checksum_address(account) for account in accounts))
-    if int(rpc.call("eth_chainId", []), 16) != chain_id:
+    received_chain = rpc.call("eth_chainId", [])
+    if not isinstance(received_chain, str) or not re.fullmatch(r"0x[0-9a-fA-F]+", received_chain):
+        raise ValueError("provider did not return a valid chain ID")
+    if int(received_chain, 16) != chain_id:
         raise ValueError("RPC chain ID does not match the requested deployment")
     block = rpc.call("eth_getBlockByNumber", [hex(block_number), False])
     if (
-        not isinstance(block, dict) or int(block.get("number", "0x0"), 16) != block_number
+        not isinstance(block, dict) or not isinstance(block.get("number"), str)
+        or not re.fullmatch(r"0x[0-9a-fA-F]+", block["number"]) or int(block["number"], 16) != block_number
         or not re.fullmatch(r"0x[0-9a-fA-F]{64}", str(block.get("hash")))
     ):
         raise ValueError("provider did not return the requested block")
