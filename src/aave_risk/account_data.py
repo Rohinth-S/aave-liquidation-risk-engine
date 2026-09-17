@@ -13,8 +13,8 @@ def read_account_data(
     rpc: JsonRpcClient, *, chain_id: int, block_number: int, pool: str, accounts: list[str],
     base_decimals: int = 8,
 ) -> dict:
-    if block_number < 0 or not 0 <= base_decimals <= 36 or not accounts:
-        raise ValueError("requires a nonnegative block number, base decimals in [0, 36], and account list")
+    if chain_id < 1 or block_number < 0 or not 0 <= base_decimals <= 36 or not 1 <= len(accounts) <= 100:
+        raise ValueError("requires a chain ID, nonnegative block number, base decimals in [0, 36], and 1 to 100 accounts")
     target = Web3.to_checksum_address(pool)
     addresses = list(dict.fromkeys(Web3.to_checksum_address(account) for account in accounts))
     received_chain = rpc.call("eth_chainId", [])
@@ -43,6 +43,8 @@ def read_account_data(
         accounts_data.append({
             "account": address, "collateral_base": collateral / scale, "debt_base": debt / scale,
             "available_borrows_base": available / scale, "liquidation_threshold_bps": threshold,
+            "aggregate_base_units": {"collateral": str(collateral), "debt": str(debt), "available": str(available)},
+            "health_factor_wad": str(hf) if debt else None,
             "ltv_bps": ltv, "health_factor": hf / 10**18 if debt else None,
         })
     return {
