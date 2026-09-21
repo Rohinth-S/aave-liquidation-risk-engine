@@ -1,7 +1,9 @@
 """Run a portfolio stress replay or read an explicit historical account snapshot."""
 
 import argparse
+import csv
 import hashlib
+from io import StringIO
 import json
 from pathlib import Path
 
@@ -22,6 +24,7 @@ def main() -> None:
     sources.add_argument("--input", type=Path, help="path to a normalized scenario JSON")
     sources.add_argument("--account", action="append", help="read account totals for this address (repeatable)")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--positions-csv", type=Path)
     parser.add_argument("--write-scenario", type=Path, help="export the replay inputs")
     parser.add_argument("--oracle-delay-blocks", type=int, help="override replay delay")
     parser.add_argument("--compare-lags", type=int, nargs="+", metavar="BLOCKS")
@@ -38,8 +41,11 @@ def main() -> None:
             input_file=args.input,
             report=args.output,
             scenario_output=args.write_scenario,
+            positions_output=args.positions_csv,
         )
         if args.account:
+            if args.positions_csv:
+                raise ValueError("positions CSV requires a single scenario replay")
             from .account_data import read_account_data
             from .rpc import JsonRpcClient
 
@@ -67,6 +73,16 @@ def main() -> None:
                 write_text_atomic(args.write_scenario, scenario.model_dump_json(indent=2) + "\n")
             result = compare_lags(LagStudy(scenario=scenario, lags=args.compare_lags)) if args.compare_lags else stress_replay(scenario)
             result["source"] = source
+            if args.positions_csv:
+                if args.compare_lags:
+                    raise ValueError("positions CSV requires a single scenario replay")
+                rows = [{"block": frame["block"], **row} for frame in result["frames"] for row in frame["positions"]]
+                fields = list(rows[0]) if rows else ["block", "account", "status"]
+                csv_buffer = StringIO(newline="")
+                writer = csv.DictWriter(csv_buffer, fieldnames=fields, lineterminator="\n")
+                writer.writeheader()
+                writer.writerows(rows)
+                write_text_atomic(args.positions_csv, csv_buffer.getvalue())
 
         result["producer"] = {"name": "aave-liquidation-risk-engine", "version": __version__, "format_version": 1}
         payload = json.dumps(result, indent=2, allow_nan=False) + "\n"
