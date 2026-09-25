@@ -26,3 +26,17 @@ def test_reserve_exposure_and_recovery_agree_with_closed_leg_updates():
                for row in result["alert_transitions"])
     for frame in result["frames"]:
         assert frame["debt_usd"] == sum(value["debt_usd"] for value in frame["reserve_exposure"].values())
+
+def test_lag_comparison_matches_replay_and_rejects_duplicates():
+    from fastapi.testclient import TestClient
+    from aave_risk.api import app
+
+    with TestClient(app) as client:
+        payload = {"scenario": demo_scenario().model_dump(), "lags": [2, 0]}
+        reply = client.post("/v1/compare", json=payload)
+        assert reply.status_code == 200
+        entries = reply.json()["comparisons"]
+        for row in entries:
+            expected = stress_replay(demo_scenario(row["oracle_delay_blocks"]))
+            assert row["cumulative_repaid_usd"] == expected["summary"]["cumulative_repaid_usd"]
+        assert client.post("/v1/compare", json={**payload, "lags": [0, 0]}).status_code == 422
