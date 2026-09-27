@@ -40,3 +40,19 @@ def test_lag_comparison_matches_replay_and_rejects_duplicates():
             expected = stress_replay(demo_scenario(row["oracle_delay_blocks"]))
             assert row["cumulative_repaid_usd"] == expected["summary"]["cumulative_repaid_usd"]
         assert client.post("/v1/compare", json={**payload, "lags": [0, 0]}).status_code == 422
+
+def test_pinned_snapshot_requires_an_explicit_provider_height():
+    import pytest
+    from aave_risk.account_data import read_account_data
+
+    class Provider:
+        def call(self, method, params):
+            if method == "eth_chainId":
+                return "0x1"
+            if method == "eth_getBlockByNumber":
+                return {"hash": "0x" + "01" * 32}
+            raise AssertionError("unexpected ABI call")
+
+    with pytest.raises(ValueError, match="requested block"):
+        read_account_data(Provider(), chain_id=1, block_number=0, pool="0x" + "02" * 20,
+                          accounts=["0x" + "03" * 20])
