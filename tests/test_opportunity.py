@@ -16,3 +16,9 @@ def test_healthy_position_has_no_opportunity():
     assert row["liquidatable"] is False
     assert row["repay"] == 0
 
+
+def test_zero_oracle_price_is_a_real_shock():
+    position = Position("x", 10, 2_000, 10_000)
+    assert position.health_factor(0) == 0
+    with pytest.raises(ValueError): position.health_factor(-1)
+

@@ -18,7 +18,10 @@ class Position:
             raise ValueError("liquidation threshold must be in (0,1] and bonus cannot be negative")
 
     def health_factor(self, price: float | None = None) -> float:
-        return self.collateral * (price or self.collateral_price) * self.liquidation_threshold / self.debt
+        effective_price = self.collateral_price if price is None else price
+        if effective_price < 0:
+            raise ValueError("price cannot be negative")
+        return self.collateral * effective_price * self.liquidation_threshold / self.debt
 
 def shock(position: Position, price_factor: float, gas_usd: float = 12, oracle_delay_blocks: int = 0, gas_multiplier: float = 1.0) -> dict:
     if price_factor <= 0 or gas_usd < 0 or oracle_delay_blocks < 0 or gas_multiplier <= 0:
