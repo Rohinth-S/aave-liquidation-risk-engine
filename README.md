@@ -90,3 +90,19 @@ use retrospectively assigned milestones from 2026-08-01 through 2026-09-30,
 the project period listed in the résumé. Each commit records its assigned date
 in the Project-Milestone trailer and its original committer timestamp in
 the Original-Commit-Date trailer. Use git log --format=fuller to inspect the dates.
+
+## Compare oracle assumptions
+
+Run `aave_liquidation_risk_engine --compare-lags 0 2 4 --output reports/lag-study.json`
+or post a scenario and a unique list of integer `lags` to `/v1/compare`. Each
+variant holds the balances, sampled market path, and risk policies fixed.
+
+Set `max_oracle_age_blocks` to classify stale observations and
+`pause_on_stale_oracle` to suspend modeled operations on stale marks. Bootstrap
+observations are flagged separately. A severe close factor is an opt-in modeling
+assumption and uses the configurable health threshold. The report distinguishes
+opening distressed debt, cascade exposure, reserve composition, and market and
+oracle shortfalls. The positions CSV uses one row per account and block.
+
+Pinned account reads return exact base-unit amounts as strings alongside
+display values. Scenario studies and account reads have separate input contracts.
