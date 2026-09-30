@@ -28,6 +28,7 @@ jobs:
           python -m pip install "${wheels[0]}[dashboard,test]"
       - run: python -m pytest -q
       - run: aave_liquidation_risk_engine --output reports/ci.json
+      - run: aave_liquidation_risk_engine --input examples/sparse-oracle.json --compare-lags 0 2 --output reports/sparse.json
       - uses: actions/upload-artifact@v4
         with:
           name: demo-${{ matrix.os }}-${{ matrix.python }}

@@ -1,0 +1,16 @@
+{
+  "reserves": [
+    {"asset": "ETH", "threshold": 0.8, "market_depth_usd": 100000},
+    {"asset": "USD", "threshold": 0.85, "market_depth_usd": 1000000}
+  ],
+  "initial_balances": [
+    {"account": "fixture", "asset": "ETH", "collateral": 2},
+    {"account": "fixture", "asset": "USD", "debt": 2000}
+  ],
+  "frames": [
+    {"block": 100, "prices_usd": {"ETH": 1500, "USD": 1}},
+    {"block": 104, "prices_usd": {"ETH": 1000, "USD": 1}},
+    {"block": 109, "prices_usd": {"ETH": 1050, "USD": 1}}
+  ],
+  "config": {"oracle_delay_blocks": 2, "max_oracle_age_blocks": 2, "pause_on_stale_oracle": true}
+}
