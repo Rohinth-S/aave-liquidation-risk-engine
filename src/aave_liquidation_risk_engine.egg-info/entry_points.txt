@@ -1,0 +1,2 @@
+[console_scripts]
+aave_liquidation_risk_engine = aave_risk.cli:main
