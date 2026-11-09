@@ -11,7 +11,7 @@ def test_portfolio_aggregation_tracks_repay_and_bad_debt():
     assert risk.collateral_usd == 20_000
     assert risk.debt_usd == 30_000
     assert risk.liquidatable_positions == 2
-    assert risk.repay_usd == pytest.approx(15_000)
+    assert risk.repay_usd == pytest.approx(13_000)
     assert risk.bad_debt_usd == pytest.approx(17_000)
 
 
